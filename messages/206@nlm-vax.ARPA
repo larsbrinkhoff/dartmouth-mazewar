@@ -1,0 +1,88 @@
+From -6552285157194720999
+X-Google-Language: ENGLISH,ASCII-7-bit
+X-Google-Thread: 152df8,c8b9a7d9adca7c7a,start
+X-Google-Attributes: gid152df8,public
+X-Google-ArrivalTime: 1985-05-24 18:28:02 PST
+Relay-Version: version B 2.10 5/3/83; site utzoo.UUCP
+Posting-Version: version B 2.10.2 9/5/84; site nlm-vax.ARPA
+Path: utzoo!watmath!clyde!bonnie!akgua!mcnc!decvax!genrad!panda!talcott!harvard!seismo!brl-tgr!nlm-mcs!nlm-vax!roy
+From: roy@nlm-vax.ARPA (Roy Standing)
+Newsgroups: net.micro.mac
+Subject: MazeWars on AppleTalk
+Message-ID: <206@nlm-vax.ARPA>
+Date: Fri, 24-May-85 21:28:02 EDT
+Article-I.D.: nlm-vax.206
+Posted: Fri May 24 21:28:02 1985
+Date-Received: Sun, 26-May-85 23:35:39 EDT
+Distribution: net
+Organization: NLM/LHNCBC, Bethesda, Md.
+Lines: 66
+
+Recently I posted a message asking for info on MazeWars in connection with
+Neil Groundwater's posting of April 21st.  While I have not received any
+responses, I have continued to try to get MazeWars up and running.  I have
+been successful and thought I should share the info.
+
+MazeWars is a multiplayer game in which each player moves around a maze
+searching for 'enemies' and destroying them, after which they are
+reincarnated in a randonmly chosen new location.  An 'enemy' appears as
+a huge eye which may be looking at you, to either side, or away.  If it
+is looking at you, its owner is seeing you and will undoubtably fire on
+you if he/she recovers from the sight of you before you fire.  Points
+are awarded for destroying an 'enemy', 1 or 2, depending on the conditions.
+
+Two views of the maze are provided, a bird's eye view and a rat's eye view.
+You see your position in the bird's eye view as an arrow, complete with
+direction.  Enemies are diamond shapes.  As you get close to an enemy,
+the display of maze-tenants disappears so you HAVE TO BE CAREFUL.  Kindly,
+you are provided with two keys ('E' and 'T') which let you peek around
+corners one poistion in front of you, 'E' peeks left, 'T' peeks right.
+I specifically mention this because it seemed to take an inordinately
+long time for me to figure out what the peek commands were doing.
+
+The initial screen tells you the active keyboard keys and their function.
+There doesn't appear to be a quit so you'll have to reboot your Mac when
+you want to leave the game.
+
+----
+To obtain and play MazeWars, Neil's message was correct but incomplete.
+He neglected to mention that to connect to the AppleTalk network you
+must invoke the 'CHOOSE PRINTER' desk accessory and choose 'connect
+to AppleTalk'.  This seems obvious now but I wasted a lot of time
+thinking that my system file, cable, or copy of MazeWars must be bad.
+
+For those who kept Neil's message, read no further.  I will post the
+MazeWars files to net.sources.mac for those (like me) who don't have
+easy access to CompuServe.
+
+For those who are interested in MazeWars but missed Neil's original
+message, a summary follows:
+
+The game and accompanying graphics are in "DL 3" on CompuServe/MAUG.
+There are four files (Mw, Eyeballs, Title, Screen Data).
+
+You can connect two Macs to play without AppleTalk.  The cable which
+comes with the development system is sufficient, a functional equivalent
+may be made by connecting two ImageWriter cables back-to-back: pin 7
+straight across and pins 2 and 3 swapped.
+
+The necessary drivers were scattered around with some Trivial File
+Transfer Demo progams, but you can also get them from the LaserWriter
+software distribution (ED NOTE: I got the drivers from a LaserWriter
+disk at a local Apple Dealer).  I leave it as an exercise for the
+reader to install DRVR resources ".mpp" and ".atp" along with INIT
+resource ID=#6 into a system file (ED NOTE: I used ResEdit, when I
+went to a local dealer I found his system file already had them
+installed so I just copied his system file).  Make a scratch system for
+this exercise!  Once this stuff is installed, INIT ID=#6 will keep you
+from using the Workshop's version of RamDisk and once this stuff is
+run you will need to power-reboot your Mac to get the printer port back
+from the AppleTalk setup state!
+
+Disclaimer: I have no relevent knowledge about MazeWars beyond that provided
+in this message.  I have tried it successfully and intend to use it as a
+'fun' diagnostic when I bring up an AppleTalk network.  I do not have
+AppleTalk yet and used two Macs connected via ImageWriter cables as
+instructed.  Have fun!
+
+

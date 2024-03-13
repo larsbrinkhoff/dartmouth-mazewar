@@ -1,0 +1,69 @@
+From -6922671927244430387
+X-Google-Language: ENGLISH,ASCII-7-bit
+X-Google-Thread: 152df8,cdeacd8aa2032ecf,start
+X-Google-Attributes: gid152df8,public
+X-Google-ArrivalTime: 1985-06-03 12:55:13 PST
+Relay-Version: version B 2.10 5/3/83; site utzoo.UUCP
+Posting-Version: version B 2.10.2 9/5/84; site reed.UUCP
+Path: utzoo!watmath!clyde!burl!ulysses!mhuxr!mhuxt!houxm!vax135!cornell!uw-beaver!tektronix!reed!nathan
+From: nathan@reed.UUCP (Nathan Wilson)
+Newsgroups: net.micro.mac
+Subject: MazeWars on 128k Macs
+Message-ID: <1604@reed.UUCP>
+Date: Mon, 3-Jun-85 15:55:13 EDT
+Article-I.D.: reed.1604
+Posted: Mon Jun  3 15:55:13 1985
+Date-Received: Thu, 6-Jun-85 01:34:02 EDT
+Organization: Reed College, Portland, Oregon
+Lines: 48
+
+This is my first posting so I hope it works and is useful to
+someone.  I recently got Maze Wars up and working both over
+an AppleNet and on two macs just hooked up without AppleNet.
+All of the macs I worked with were 128k.
+
+All I did for the two hooked up with AppleNet was install
+the DRVR's .apt and .mmp and INIT ID=6 into the system with
+ResEdit. After these were installed I just reset the system
+started up MazeWars and it worked.
+
+I got the resources from a development office here at Reed, but
+they are probably avaialable from retailers.  Would it be appropriate
+to post these to the net maybe in the form of a small data file
+onto which the DRVR's and the INIT had been installed using
+ResEdit?
+
+In order to hook up the two mac to each other I just took the cable
+that came with my AppleModem and hooked it up to the printer ports
+on both machines.  I then powered them both up and went into the
+apple menu and selected Choose Printer (the desk accesory that
+came with the recent finder update, also available from local dealers).
+I then selected the modem port for my imagewriter (possibly an
+unnecessary step) and clicked on the Connect AppleNet bubble.
+I then got a couple dialog boxes that told me to make sure the
+AppleNet was hooked up to the printer port and then one that said it
+couldn't install the applenet at this time but that it would be
+installed next time I powered up my mac.  (I did this same procedure
+with both macs).  So I reset my mac and started up MazeWars and it
+worked just fine.  The stuff I did with Choose Printer had probably
+already been done on the two hooked up with AppleNet.
+
+The pin connections for the modem cable are:
+	(1 is the upper left hand pin 5 is the upper right
+	6 is the lower left and 9 the lower right)
+		1	nothing
+		2	nothing
+		3	3,8 (Shorted)
+		4	nothing
+		5	9
+		6	6
+		7	7
+		8	3,8 (Shorted)
+		9	5
+I have no idea which of these connection are necessary.  I was 
+originally planning on hacking on together from the previous net
+info, but when I found that the modem cable worked I stopped.
+
+				-Nathan Wilson
+
+

@@ -1,0 +1,1940 @@
+From 5553959445915812526
+X-Google-Language: ENGLISH,ASCII-7-bit
+X-Google-Thread: 166c8a,63136cc48c6a1cfb,start
+X-Google-Attributes: gid166c8a,public
+X-Google-ArrivalTime: 1985-10-15 10:20:45 PST
+Relay-Version: version B 2.10 5/3/83; site utzoo.UUCP
+Posting-Version: version B 2.10 5/3/83; site ius2.cs.cmu.edu.ARPA
+Path: utzoo!linus!philabs!cmcl2!seismo!rochester!pt.cs.cmu.edu!ius2.cs.cmu.edu!ralphw
+From: ralphw@ius2.cs.cmu.edu.ARPA (Ralph Hyre)
+Newsgroups: net.sources.mac
+Subject: Dartmouth Mazewar, Lisa Pascal Source (executable follows)
+Message-ID: <214@ius2.cs.cmu.edu.ARPA>
+Date: Tue, 15-Oct-85 13:20:45 EDT
+Article-I.D.: ius2.214
+Posted: Tue Oct 15 13:20:45 1985
+Date-Received: Fri, 18-Oct-85 20:57:02 EDT
+Organization: Carnegie-Mellon University, CS/RI
+Lines: 1918
+Keywords: appletalk, mazewar, dartmouth
+
+References:
+Organization: Carnegie-Mellon University, CS/RI
+
+This uses the Lisa Pascal workshop.  I believe it's different than the
+version available from Sumex, but source is included with this version.
+(Sources on net.sources.mac?  Practically unheard of!)
+
+27-Sep-85 20:42:11-EDT,56114;000000000000
+Return-Path: <mss%dartmouth.csnet@CSNET-RELAY.ARPA>
+Received: from CSNET-RELAY.ARPA by C.CS.CMU.EDU with TCP; Fri 27 Sep 85 20:41:34-EDT
+Received: from dartmouth by csnet-relay.csnet id ah05329; 27 Sep 85 19:49 EDT
+Received: by dartmouth.CSNET (4.12/1.20)
+	id AA06004; Fri, 27 Sep 85 18:36:26 edt
+Date: 27 Sep 1985 18:35-EST
+From: mss%dartvax%dartmouth.csnet@CSNET-RELAY.ARPA
+Subject: Re: MazeWar and RCMP
+To: "Ralph W. Hyre Jr." <Ralph.Hyre%c.cs.cmu.edu@csnet-relay.arpa>
+Message-Id: <496708520/mss@dartvax>
+In-Reply-To: "Ralph W. Hyre Jr."'s message of Thu 26 Sep 85 180122-EDT
+
+There are two files, the Pascal source and the Resource compiler source.
+This is the former; the next message is the latter.
+		-Mark
+
+{$X-}
+{$M+}
+
+PROGRAM Maze;
+
+  { Edit -- A small sample application written in Pascal }
+  {	    by Macintosh Technical Support	 }
+  {SK 6/18 Added Memtypes, if GetNextEvent, EraseRect in update event,
+   fixed for new Edit menu  }
+
+
+   USES {$U-}
+      {$U Obj/Memtypes	  } Memtypes,
+      {$U Obj/QuickDraw	  } QuickDraw,
+      {$U Obj/OSIntf	  } OSIntf,
+      {$U Obj/ToolIntf	  } ToolIntf,
+      {$U Obj/PACKINTF	  } PackIntf,
+      {$U AB/ABPasIntf	  } ABPasIntf;
+
+   CONST
+      lastMenu = 4; { number of menus }
+      appleMenu = 1; { menu ID for desk accessory menu }
+      fileMenu = 256; { menu ID for File menu }
+      MoveMenu = 257; { menu ID for Edit menu }
+      autoMenu = 258; { menu ID for autoplayer menu }
+
+      LastStatLine = 26;
+
+      HMazeSize = 23; { 24 -1 for 0 based }
+      VMazeSize = 23; { 24 -1 for 0 based }
+      UpStart = 15;   { Upper left corner of maze }
+      LeftStart = 15;
+      MaxPlayers = 255;	 { One for each possible node number }
+      LastPlayer = MaxPlayers;
+
+      SSize = 11;       { Size of a box in the maze }
+      KSize = 30;       { Size of soft keys }
+      KSpace = 5;       { Space between soft keys }
+      FSize = 10;       { Size of Fire keys in movement buttons }
+      TSize = 9;        { Size of font for symbols }
+      ColSep = 20;      { Size between symbol, name and score }
+      MaxString = 80;
+      NetEvt = 10;      { Event number for posting receptions }
+      NoCheckSum = FALSE;
+      AsyncCall = True;
+      SyncCall = FALSE;
+
+      UpDateRate = 100;	     { How often to redraw info }
+      ShortCount = 30;	     { How many short status records/long status record }
+
+      BulletSymbol = '*';
+      TickperSquare = 15;    { Speed of bullet in ticks }
+
+   TYPE
+
+      ButtonChoice = (Up, Left, Down, Right,
+                      UpFire, LeftFire, DownFire, RightFire,
+                      None);
+      MazePoint = RECORD
+            h: -1..HMazeSize;
+            v: -1..VMazeSize;
+            END;
+
+      PlayerRecord =  record
+        Symbol: char;
+        UniqueID: BYTE;
+        FireDir : ButtonChoice;
+        Position: Point;
+        LogPos: MazePoint;
+        Score: Integer;
+        BulletPos: Point;
+        LogBulletPos: MazePoint;
+        Name: STR255;
+        end;
+
+      RefPlayerRecord = ^ PlayerRecord;
+
+      ShortReport = packed record
+        Size: Integer;
+        Symbol: char;
+        UniqueID: BYTE;
+        FireDir : ButtonChoice;
+        Position: Point;
+        LogPos: MazePoint;
+        Score: Integer;
+        BulletPos: Point;
+        LogBulletPos: MazePoint;
+        HitBy: BYTE;
+        END;
+
+      Ref_ShortReport = ^ ShortReport;
+
+      LongReport = packed record
+        Size: Integer;
+        Symbol: char;
+        UniqueID: BYTE;
+        FireDir : ButtonChoice;
+        Position: Point;
+        LogPos: MazePoint;
+        Score: Integer;
+        BulletPos: Point;
+        LogBulletPos: MazePoint;
+        HitBy: BYTE;		        { $FF not hit, $0 quiting, # hitter }
+        Name: STR255;
+        END;
+
+      Ref_LongReport = ^ LongReport;
+
+      BitRow = packed array [0..HMazeSize] OF Boolean;
+
+   VAR
+      myMenus: ARRAY [1..lastMenu] OF MenuHandle;
+      screenRect,dragRect,pRect: Rect;
+      doneFlag,temp: BOOLEAN;
+      myEvent: EventRecord;
+      code,refNum: INTEGER;
+      wRecord: WindowRecord;
+      myWindow,whichWindow: WindowPtr;
+      theMenu,theItem: INTEGER;
+      hTE: TEHandle;
+
+      MazeMap: array [0..VMazeSize] of BitRow;
+
+      Players: packed array [BYTE] of RefPlayerRecord;
+      LastSeen: packed array[BYTE] OF LongInt;
+      StatLines: array [1..LastStatLine] of RefPlayerRecord; { Is line being used?      }
+      LastUsedStat: 0..LastStatLine;		     { What is last line used?  }
+      PlayerLine: array[BYTE] of 0..LastStatLine;    { Status line showing play }
+      NumShortSent: Integer;			     { Number of short msgs since
+                                                       last long message }
+   VAR
+      NextDeadCheck: LongInt;
+
+      UpRect, DnRect, LRect, RRect: Rect;   { Movement rectangles }
+      UFRect, DFRect, LFRect, RFRect: Rect; { Firing rectangles }
+      KeyMidPoint: Point;		    { Offset to middle of soft keys }
+      ButtonSelected: ButtonChoice;
+      UpdateCnt: Integer;		    { When to send position info }
+      BulletUpdate: LongInt;		    { When to move bullet }
+      Me :integer;			    { Which player am I? }
+
+   CONST
+      MazeProtocol = 6;
+
+   VAR
+      { Network variables }
+      RetStatus: OSErr;			   { Return status from network }
+      CurPlace, NewPlace: PlayerRecord;	   { Say where you are }
+      OtherPlace: PlayerRecord;		   { Where someone else is }
+      OutputH, InputH: ABRecHandle;
+      InBuf,OutBuf: LongReport;
+      DoDisplay : Boolean;		   { Display packets as they arrive }
+      DoSend, DoListen: Boolean;	   { Receive or send packets }
+      DoRemove: Boolean;		   { Remove inactive players }
+
+      FirstActivate: Boolean;
+
+   VAR
+      UseSoundEffects: Boolean;
+      TalkDummy: Integer;
+      FUNCTION mSpeak( text:STR255; Volume: Integer; Pitch: Integer;
+                        Speed: Integer):  Integer; EXTERNAL;
+
+      { Autopilot variables }
+   CONST
+       APWait = 30; { do something every second }
+   VAR
+       APTime: LongInt;
+       WhatToDo: Integer;
+       PilotOn: Boolean;
+
+   CONST
+       NotHitIndicator = $FF;
+       QuitIndicator   =   0;
+
+   PROCEDURE SendBadPkt;
+   { Make a bad packet and send it out }
+   TYPE
+      BMPoint = record
+          h: -2..24;
+          v: -2..24;
+          END;
+
+      BShortReport = packed record
+        Size: Integer;
+        Symbol: char;
+        UniqueID: BYTE;
+        FireDir : -1..15;
+        Position: Point;
+        LogPos: BMPoint;
+        Score: Integer;
+        BulletPos: Point;
+        LogBulletPos: BMPoint;
+        HitBy: BYTE;
+        END;
+
+      BRef_ShortReport = ^ BShortReport;
+
+   VAR FakePkt: BRef_ShortReport;
+
+   BEGIN
+       WHILE OutputH^^.abResult = 1 DO; { Wait for last send to finish }
+
+       WITH OutBuf DO BEGIN
+           Symbol:= Players[Me]^.Symbol;
+           UniqueID:= Players[Me]^.UniqueID;
+           FireDir := Players[Me]^.FireDir;
+           Position:= Players[Me]^.Position;
+           LogPos:= Players[Me]^.LogPos;
+           Score:= Players[Me]^.Score;
+           BulletPos:= Players[Me]^.BulletPos;
+           LogBulletPos:= Players[Me]^.LogBulletPos;
+           HitBy:= 45;  { $FF not hit, $0 quitting, # hitter }
+           END;
+
+      FakePkt := @OutBuf;
+
+      WITH OutputH^^ DO BEGIN
+          IF (NumShortSent > ShortCount)
+              THEN BEGIN
+                  { Send a long packet }
+                  lapReqcount := sizeof(LongReport);
+                  OutBuf.Size := sizeof(LongReport);
+                  NumShortSent := 0;
+                  OutBuf.Name := Players[Me]^.Name;
+              END
+              ELSE BEGIN
+                  { Send a short packet }
+                  lapReqcount := sizeof(ShortReport);
+                  OutBuf.Size := sizeof(ShortReport);
+                  NumShortSent := NumShortSent + 1;
+              END;
+
+          lapAddress.LAPProtType := MazeProtocol;
+          lapAddress.dstNodeID := $FF;
+          lapDataPtr := @OutBuf;
+          END;
+
+      { Perturb the packet }
+      WITH FakePkt^ DO CASE (TickCount MOD 14) OF
+         0: BEGIN Size := 26;OutputH^^.lapReqcount := 26; END;
+         1: Symbol := '*';
+         2: UniqueID := 0;
+         3: FireDir := -1;
+         4: Position.H := 5000;
+         5: Position.V := -100;
+         6: LogPos.H := -2;
+         7: LogPos.V := 24;
+         8: OutputH^^.lapAddress.LAPProtType := MazeProtocol + 1;
+         9: BulletPos.H := -5;
+         10: BulletPos.V := 3333;
+         11: LogBulletPos.H := 24;
+         12: LogBulletPos.V := -2;
+         13: HitBy := 44;
+         END;
+
+      RetStatus := LAPWrite(OutputH,AsyncCall);
+
+   END;
+
+   PROCEDURE ReportPlace(P:RefPlayerRecord;WhoHitMe:BYTE);
+   { Make a status packet and send it out }
+   BEGIN
+       IF NOT DoSend THEN EXIT(ReportPlace);
+
+       WHILE OutputH^^.abResult = 1 DO; { Wait for last send to finish }
+
+       WITH OutBuf DO BEGIN
+           Symbol:= P^.Symbol;
+           UniqueID:= P^.UniqueID;
+           FireDir := P^.FireDir;
+           Position:= P^.Position;
+           LogPos:= P^.LogPos;
+           Score:= P^.Score;
+           BulletPos:= P^.BulletPos;
+           LogBulletPos:= P^.LogBulletPos;
+           HitBy:= WhoHitMe;  { $FF not hit, $0 quitting, # hitter }
+           END;
+
+      WITH OutputH^^ DO BEGIN
+          IF (NumShortSent > ShortCount)
+              THEN BEGIN
+                  { Send a long packet }
+                  lapReqcount := sizeof(LongReport);
+                  OutBuf.Size := sizeof(LongReport);
+                  NumShortSent := 0;
+                  OutBuf.Name := P^.Name;
+              END
+              ELSE BEGIN
+                  { Send a short packet }
+                  lapReqcount := sizeof(ShortReport);
+                  OutBuf.Size := sizeof(ShortReport);
+                  NumShortSent := NumShortSent + 1;
+              END;
+
+          lapAddress.LAPProtType := MazeProtocol;
+          lapAddress.dstNodeID := $FF;
+          lapDataPtr := @OutBuf;
+          END;
+
+      RetStatus := LAPWrite(OutputH,AsyncCall);
+
+   END;
+
+   PROCEDURE EraseStatus(P: RefPlayerRecord;WhichLine:Integer);
+   { This procedure erases the status line for a given player at a given line }
+   VAR t,l,i: Integer;
+       ScoreStr: STR255;
+   BEGIN
+       T := DnRect.Bottom + KSpace + (TSize + 2)*(WhichLine - 1);
+       L := LRect.Left;
+       TextMode(srcXor);
+       TextSize(TSize);
+       { Symbol }
+       MoveTo(L,T+TSize);
+       DrawChar(P^.Symbol);
+       { Name }
+       MoveTo(L+ColSep,T+TSize);
+       DrawString(P^.Name);
+       {Score }
+       MoveTo(L+ColSep+MaxString,T+TSize);
+       NumToString(P^.Score,ScoreStr);
+       DrawString(ScoreStr);
+   END; { end of proc }
+
+   PROCEDURE FirstStatus(P:RefPlayerRecord);
+   { This procedure records the first time a player's status line is
+     displays. It finds an empty line and then write the information into
+     that display slot }
+   VAR t,l,i: Integer;
+       ScoreStr: STR255;
+   BEGIN
+       T := DnRect.Bottom + KSpace;
+       L := LRect.Left;
+       TextMode(srcXor);
+       TextSize(TSize);
+       { Find an open place }
+       FOR i := 1 TO LastStatLine DO
+           IF StatLines[i] = NIL THEN BEGIN
+               StatLines[i] := P;
+               PlayerLine[P^.UniqueID] := i;
+               { Symbol }
+               MoveTo(L,T+TSize);
+               DrawChar(P^.Symbol);
+               { Name }
+               MoveTo(L+ColSep,T+TSize);
+               DrawString(P^.Name);
+               {Score }
+               MoveTo(L+ColSep+MaxString,T+TSize);
+               NumToString(P^.Score,ScoreStr);
+               DrawString(ScoreStr);
+               IF i > LastUsedStat THEN LastUsedStat := i;
+               EXIT(FirstStatus);
+           END
+           ELSE T := T + TSize + 2;
+       { Couldn't find an open line, so this person doesn't get displayed! }
+   END; { end of proc }
+
+   PROCEDURE UpDateStatus(P:RefPlayerRecord; NewName:STR255; NewScore: Integer);
+   { This procedure takes a player that has already been displayed and updates
+     the name and score as necessary -- note: the old symbol is always kept }
+   VAR T, L, i: Integer;
+       ScoreStr: STR255;
+   BEGIN
+       T := DnRect.Bottom + KSpace;
+       L := LRect.Left;
+       TextMode(srcXor);
+       TextSize(TSize);
+       FOR i := 2 TO PlayerLine[P^.UniqueID] DO T := T + TSize + 2;
+       WITH P^ DO BEGIN
+           IF (Name <> NewName)	 THEN BEGIN
+               { Erase old name }
+               MoveTo(L+ColSep,T+TSize);
+               DrawString(Name);
+               { Write in new name }
+               MoveTo(L+ColSep,T+TSize);
+               DrawString(NewName);
+               Name := NewName;
+               END;
+
+           { And update the score }
+           IF Score <> NewScore THEN BEGIN
+               { Erase the old }
+               MoveTo(L+ColSep+MaxString,T+TSize);
+               NumToString(Score,ScoreStr);
+               DrawString(ScoreStr);
+               { Put in the new }
+               MoveTo(L+ColSep+MaxString,T+TSize);
+               NumToString(NewScore,ScoreStr);
+               DrawString(ScoreStr);
+               END;
+
+           END;
+
+   END;
+
+   PROCEDURE DisplayPkt(P:Ref_LongReport);
+   CONST
+        OKBut = 1;
+        CancelBut = 32;
+        SizeField = 2;
+        SymbolField = 3;
+        UniqueIDField = 4;
+        FireDirField  = 5;
+        PosHField = 6;
+        PosVField = 7;
+        LogHField = 8;
+        LogVField = 9;
+        ScoreField = 10;
+        BulHField = 11;
+        BulVField = 12;
+        LogBPHField = 13;
+        LogBPVField = 14;
+        HitByField = 15;		   { $FF not hit, $0 quiting, # hitter }
+        NameField = 16;
+
+        UserDialog = 2;
+
+
+   VAR
+        i: Integer;
+        ItemHit: Integer;
+        LocalItemHandle: Handle;
+        tmpStr: STR255;
+        theItem: INTEGER;
+
+        MyDialog: DialogPtr;
+        TheItemType: Integer;
+        TheItemBox: Rect;
+
+   BEGIN
+
+     MyDialog :=  GetNewDialog(UserDialog,NIL,POINTER(-1));
+     tmpStr := ' ';
+
+
+     GetDItem(MyDialog,SizeField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(P^.Size,tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,SymbolField,TheItemType,LocalItemHandle,TheItemBox);
+     tmpStr := ' '; tmpStr[1] := P^.Symbol;
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,UniqueIDField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(P^.UniqueID,tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,FireDirField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.FireDir),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,PosHField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.Position.H),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,PosVField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.Position.V),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,LogHField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.LogPos.H),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,LogVField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.LogPos.V),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,ScoreField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.Score),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,BulHField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.BulletPos.H),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,BulVField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.BulletPos.V),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,LogBPHField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.LogBulletPos.H),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,LogBPVField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.LogBulletPos.V),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,HitByField,TheItemType,LocalItemHandle,TheItemBox);
+     NumToString(ORD(P^.HitBy),tmpStr);
+     SetIText(LocalItemHandle,tmpStr);
+
+     GetDItem(MyDialog,NameField,TheItemType,LocalItemHandle,TheItemBox);
+     IF ORD(P^.Size) = Sizeof(LongReport)
+         THEN tmpStr := P^.Name
+         ELSE tmpStr := 'No name -- short packet ';
+     SetIText(LocalItemHandle,tmpStr);
+
+     ModalDialog(NIL,ItemHit);
+     IF ItemHit = CancelBut THEN BEGIN
+         DoDisplay := FALSE;
+         CheckItem(MyMenus[4],3,FALSE);
+         END;
+     CloseDialog(MyDialog);
+   END;
+
+   PROCEDURE ReadPlayerName(P:RefPlayerRecord);
+   { This procedure reads in the initial information about the user. Note:
+     it allows invisible users since a space may be given as the
+     symbol for the player! }
+   CONST
+        OKBut = 1;
+        CancelBut = 2;
+        NameField = 3;
+        SymbolField = 4;
+        ErrorField = 5;
+
+        UserDialog = 1;
+
+
+   VAR
+        i: Integer;
+        ItemHit: Integer;
+        LocalItemHandle: Handle;
+        tmpStr: STR255;
+        theItem: INTEGER;
+
+        MyDialog: DialogPtr;
+        TheItemType: Integer;
+        TheItemBox: Rect;
+        InputOK : Boolean;
+        Guess: Integer;
+
+   BEGIN
+
+     MyDialog :=  GetNewDialog(UserDialog,NIL,POINTER(-1));
+     tmpStr := ' ';
+     Guess := (GetNodeNumber MOD 51);
+     IF Guess < 26 THEN tmpStr[1] := CHR(ORD('A')+Guess)
+                   ELSE tmpStr[1] := CHR(ORD('a')+(Guess-26));
+     GetDItem(MyDialog,SymbolField,TheItemType,LocalItemHandle,TheItemBox);
+     SetIText(LocalItemHandle,tmpStr);
+     SelIText(MyDialog,NameField,0,9999);
+     REPEAT
+         ModalDialog(NIL,ItemHit);
+         IF ItemHit = CancelBut THEN DoneFlag := TRUE;
+         GetDItem(MyDialog,SymbolField,TheItemType,LocalItemHandle,TheItemBox);
+         GetIText(LocalItemHandle,tmpStr);
+         IF length(tmpStr) = 1 THEN BEGIN
+                P^.Symbol := tmpStr[1];
+                GetDItem(MyDialog,NameField,TheItemType,LocalItemHandle,TheItemBox);
+                GetIText(LocalItemHandle,P^.Name);
+                InputOK := true;
+                END
+         ELSE BEGIN
+                SysBeep(1);
+                GetDItem(MyDialog,ErrorField,TheItemType,LocalItemHandle,TheItemBox);
+                SetIText(LocalItemHandle,'Only one character symbols are allowed');
+                InputOK := False;
+                END;
+     UNTIL InputOk;
+
+     CloseDialog(MyDialog);
+   END;
+
+   PROCEDURE InitPlayer(ID:Byte);
+   { This procedure allocates and initializes a player record for keeping
+     track of positions, hits, and so on. This should be called once per
+     player }
+   BEGIN
+       Players[ID] := RefPlayerRecord(NewPtr(sizeof(PlayerRecord)));
+       { See if we ran out of room }
+       If Players[ID] = NIL THEN EXIT(InitPlayer);
+
+       WITH Players[ID]^ DO BEGIN
+         Name := '';
+         UniqueID := ID;
+         FireDir := None;
+         Score := 0;
+         Symbol := ' ';
+         Position.h := 0;
+         Position.v := 0;
+         LogPos.h := 0;
+         LogPos.v := 0;
+         BulletPos.h := -1;
+         BulletPos.v := -1;
+         LogBulletPos.h := -1;
+         LogBulletPos.v := -1;
+         END;
+       LastSeen[ID] := TickCount;
+
+   END;
+
+   PROCEDURE PlacePlayer(P:RefPlayerRecord);
+   { This procedure is used to randomly place a player in the Maze. This
+     happens when a play first starts and when a player is hit }
+   VAR v,h : integer;
+       voffset, hoffset: Integer;
+   BEGIN
+        randSeed := LoWord(TickCount);
+        REPEAT voffset := Random MOD (VMazeSize + 1); UNTIL voffset >= 0;
+        REPEAT hoffset := Random MOD (HMazeSize + 1); UNTIL hoffset >= 0;
+        WITH P^ DO BEGIN
+            LogPos.v := 0;
+            LogPos.h := 0;
+            FOR h := 0 TO HMazeSize DO
+                    FOR v := 0 TO VMazeSize DO
+                        IF NOT MazeMap[(v+voffset) MOD (VMazeSize + 1)]
+                                      [(h+hoffset) MOD (HMazeSize + 1)] THEN BEGIN
+                            { Found an empty spot }
+                            LogPos.v := (v + voffset) MOD (VMazeSize + 1);
+                            LogPos.h := (h + hoffset) MOD (HMazeSize + 1);
+                            Position.v := UpStart + SSize - 2 + LogPos.v*SSize;
+                            Position.h := LeftStart + 2 + LogPos.h*SSize;
+                            Exit(PlacePlayer);
+                            END;
+       END;
+   END;
+
+   PROCEDURE InitMaze;
+   { This procedure initializes the maze and global variables used by the
+     program. }
+   VAR i,j,h ,v: integer;
+       FireOffset : Integer;
+       OSStatus : OSErr;
+   BEGIN
+        { And fill in the maze }
+        { Note: Pascal reverses each byte in boolean arrays }
+        { 0 => 0, 1=>8, 2=> 4, 3=> C, 4=>2, 5=>A, 6=> 6, 7=>E,
+          8 => 1, 9=>9, A=> 5, B=> D, C=>3, D=>B, E=>7, F=>f }
+        StuffHex(@MazeMap[0],'FFFFFF'); {FFFFFF}
+        StuffHex(@MazeMap[1],'052EAA'); {A07455}
+        StuffHex(@MazeMap[2],'A528AA'); {A51455}
+        StuffHex(@MazeMap[3],'A5ACAA'); {A53555}
+        StuffHex(@MazeMap[4],'FDA9A2'); {BF9545}
+        StuffHex(@MazeMap[5],'01A2AA'); {804555}
+        StuffHex(@MazeMap[6],'7582AA'); {AE4155 }
+        StuffHex(@MazeMap[7],'5582AA'); {AA4155 }
+        StuffHex(@MazeMap[8],'15A2A8'); {A84515 }
+        StuffHex(@MazeMap[9],'F5A3AA'); {AFC555 }
+        StuffHex(@MazeMap[10],'05A0AA'); {A00555 }
+        StuffHex(@MazeMap[11],'7522AA'); {AE4455 }
+        StuffHex(@MazeMap[12],'45A2AA'); {A24555 }
+        StuffHex(@MazeMap[13],'D5A3BA'); {ABC55D }
+        StuffHex(@MazeMap[14],'57828A'); {EA4151 }
+        StuffHex(@MazeMap[15],'1182E8'); {884117 }
+        StuffHex(@MazeMap[16],'FFFF89'); {FFFF91 }
+        StuffHex(@MazeMap[17],'1115E9'); {88A897 }
+        StuffHex(@MazeMap[18],'454080'); {A20201 }
+        StuffHex(@MazeMap[19],'FDFF93'); {BFFFC9 }
+        StuffHex(@MazeMap[20],'051090'); {A00809 }
+        StuffHex(@MazeMap[21],'FD17F4'); {BFE82F }
+        StuffHex(@MazeMap[22],'01C087'); {8003E1 }
+        StuffHex(@MazeMap[23],'FFFFFF'); {FFFFFF }
+
+
+        { Set up magic values for the soft keys }
+
+                      { Left, Up, Right, Down }
+        KeyMidPoint.h := (KSize DIV 2) - (TSize DIV 2);
+        KeyMidPoint.v := (KSize DIV 2) + (TSize DIV 2);
+        FireOffset := (KSize - FSize) DIV 2;
+
+        LRect.Left := LeftStart+ (HMazeSize + 2)*SSize;
+        LRect.Right := LRect.Left + KSize;
+        LRect.Top := UpStart + KSize + KSpace;
+        LRect.Bottom := LRect.Top + KSize;
+
+                       { Left, top, right, bottom }
+        SetRect(LFRect,LRect.Right - FSize,LRect.Top + FireOffset,
+                       LRect.Right, LRect.Top + FireOffset + FSize);
+
+        UpRect.Left := LRect.Right + KSpace;
+        UpRect.Right := UpRect.Left + KSize;
+        UpRect.Top := UpStart;
+        UpRect.Bottom := UpRect.Top + KSize;
+
+        SetRect(UFRect, UpRect.Left + FireOffset, UpRect.Bottom - FSize,
+                        UpRect.Left + FireOffset + FSize, UpRect.Bottom);
+
+        RRect.Left := UpRect.Right + KSpace;
+        RRect.Right := RRect.Left + KSize;
+        RRect.Top := LRect.Top;
+        RRect.Bottom := LRect.Bottom;
+
+        SetRect(RFRect, RRect.Left, RRect.Top + FireOffset,
+                        RRect.Left + FSize, RRect.Top + FireOffset + FSize);
+
+        DnRect.Left := UpRect.Left;
+        DnRect.Right := UpRect.Right;
+        DnRect.Top := LRect.Bottom + KSpace;
+        DnRect.Bottom := DnRect.Top + KSize;
+
+        SetRect(DFRect, DnRect.Left + FireOffset, DnRect.Top,
+                        DnRect.Left + FireOffset + FSize, DnRect.Top + FSize);
+
+        ButtonSelected := None;
+
+        { Initialize the player table }
+
+        Me := GetNodeNumber;
+
+        FOR i := 0 TO MaxPlayers DO BEGIN
+            LastSeen[i] := 0;
+            Players[i] := NIL;
+            PlayerLine[i] := 0;
+            END;
+        FOR i := 1 TO LastStatLine DO StatLines[i] := NIL; { none used }
+        LastUsedStat := 0;
+        NextDeadCheck := TickCount;
+
+        {Set up local player }
+        InitPlayer(Me);
+        ReadPlayerName(Players[Me]);
+        PlacePlayer(Players[Me]);
+        FirstActivate := TRUE;
+        UseSoundEffects := FALSE;
+
+        { Setup the fonts for everyone }
+        TextMode(srcXor);
+        TextSize(TSize);
+        TextFont(Geneva);
+
+
+        { ******************************************************* }
+        { Here is a good place to initialize the network	  }
+        { ******************************************************* }
+
+        OsStatus := LAPOpenProtocol(MazeProtocol,NIL);
+        IF OSStatus <> noErr THEN SYSBeep(30);
+
+        { Output buffer for reporting position }
+        OutputH := POINTER(NewHandle(lapSize));
+        WITH OutputH^^ DO BEGIN
+            abResult := noErr;
+            lapAddress.LAPProtType := MazeProtocol;
+            lapAddress.dstNodeID := $FF;
+            lapReqCount := sizeof(LongReport);
+            OutBuf.Size := sizeof(LongReport);
+            lapDataPtr := @OutBuf;
+            END;
+        NumShortSent := 0;
+
+        { Input buffer for reading positions }
+        InputH := POINTER(NewHandle(lapSize));
+        WITH InputH^^ DO BEGIN
+            lapAddress.LAPProtType := MazeProtocol;
+            lapAddress.dstNodeID := $FF;
+            lapReqCount := sizeof(LongReport);
+            InBuf.Size := sizeof(LongReport);
+            lapDataPtr := @InBuf;
+            END;
+
+        RetStatus := LAPRead(InputH,AsyncCall);
+
+        DoSend := true;
+        DoListen := true;
+        DoRemove := true;
+        DoDisplay := false;
+
+   END;
+
+   PROCEDURE FirstSymbol(Symbol:Char; NewPos:Point);
+   { This procedure is used to display a symbol in the maze for the first
+     time AND for the last time (xor wipes a previous symbol as well as
+     establishes it) }
+   BEGIN
+       {TextMode(srcXor);}
+       {TextSize(TSize);}
+       MoveTo(NewPos.h, NewPos.v);
+       DrawChar(Symbol);
+   END;
+
+   PROCEDURE MoveSymbol(Symbol:Char; OldPos:Point; NewPos:Point);
+   { This procedure is used to move the display of a symbol in the maze.
+     It assumes that the symbol is already in the Maze at the place
+     specified by OldPos. Note: because of Xor's properties it does not
+     really matter which arg is Old and which is new. }
+   BEGIN
+       IF (OldPos.h <> NewPos.h) OR (OldPos.v <> NewPos.v) THEN BEGIN
+            {TextMode(srcXor);}
+            {TextSize(TSize);}
+            MoveTo(OldPos.h, OldPos.v);
+            DrawChar(Symbol);
+            MoveTo(NewPos.h, NewPos.v);
+            DrawChar(Symbol);
+            END;
+   END;
+
+   PROCEDURE TurnOffBullet(P: RefPlayerRecord);
+   { This procedure is used to turn off a bullet from the display and
+     to update a player's record appropriately. A bullet should be turned
+     off when it hits a wall or when a player reports that he's been hit. }
+   BEGIN
+       WITH P^ DO BEGIN
+           { Turn off display if still showing it }
+           IF FireDir <> None THEN FirstSymbol(BulletSymbol,BulletPosition);
+           BulletPos.h := -1;
+           BulletPos.v := -1;
+           LogBulletPos.h := -1;
+           LogBulletPos.v := -1;
+           FireDir := None;
+           END;
+   END;
+
+   FUNCTION NotFiring(P: RefPlayerRecord): Boolean;
+   { This procedure checks to see if a player is firing; if not, the player
+     is set to firing, with the appropriate parts of the record being changed. }
+   BEGIN
+       NotFiring := (P^.FireDir = None);
+       IF P^.FireDir = None THEN BEGIN
+           P^.BulletPos := P^.Position;
+           P^.LogBulletPos := P^.LogPos;
+           BulletUpdate := TickCount + TickperSquare;
+           IF UseSoundEffects THEN TalkDummy := mSpeak('bS2AES5NG',5,5,5);
+           END;
+   END;
+
+   PROCEDURE FireUp(P:RefPlayerRecord);
+   { This procedure starts, if appropriate, a bullet going up }
+   BEGIN
+       if NotFiring(P) THEN BEGIN
+           P^.FireDir := UpFire;
+           FirstSymbol(BulletSymbol,P^.BulletPos);
+           END;
+   END;
+
+   PROCEDURE FireDown(P:RefPlayerRecord);
+   { This procedure starts, if appropriate, a bullet going down }
+   BEGIN
+      if NotFiring(P) THEN BEGIN
+          P^.FireDir := DownFire;
+          FirstSymbol(BulletSymbol,P^.BulletPos);
+          END;
+   END;
+
+   PROCEDURE FireLeft(P:RefPlayerRecord);
+   { This procedure starts, if appropriate, a bullet going left }
+   BEGIN
+      if NotFiring(P) THEN BEGIN
+          P^.FireDir := LeftFire;
+          FirstSymbol(BulletSymbol,P^.BulletPos);
+          END;
+   END;
+
+   PROCEDURE FireRight(P:RefPlayerRecord);
+   { This procedure starts, if appropriate, a bullet going right }
+   BEGIN
+       if NotFiring(P) THEN BEGIN
+           P^.FireDir := RightFire;
+           FirstSymbol(BulletSymbol,P^.BulletPos);
+           END;
+   END;
+
+
+   PROCEDURE MoveUp(P:RefPlayerRecord);
+   { This procedure moves a player one square up (if possible) }
+   VAR NewPos: Point;
+   BEGIN
+       if NOT MazeMap[P^.LogPos.v-1][P^.LogPos.h] THEN WITH P^ DO BEGIN
+           NewPos.v := Position.v - SSize;
+           NewPos.h := Position.h;
+           MoveSymbol(Symbol, Position,NewPos);
+           Position := NewPos;
+           LogPos.v := LogPos.v - 1;
+       END;
+   END;
+
+   PROCEDURE MoveDown(P:RefPlayerRecord);
+   { This procedure moves a player one square down (if possible) }
+   VAR NewPos: Point;
+   BEGIN
+      WITH P^ DO
+      if NOT MazeMap[LogPos.v+1][LogPos.h] THEN BEGIN
+          NewPos.v := Position.v + SSize;
+          NewPos.h := Position.h;
+          MoveSymbol(Symbol, Position,NewPos);
+          Position := NewPos;
+          LogPos.v := LogPos.v + 1;
+          END;
+   END;
+
+   PROCEDURE MoveLeft(P:RefPlayerRecord);
+   { This procedure moves a player one square left (if possible) }
+   VAR NewPos: Point;
+   BEGIN
+      WITH P^ DO if NOT MazeMap[LogPos.v][LogPos.h-1] THEN BEGIN
+          NewPos.v := Position.v;
+          NewPos.h := Position.h - SSize;
+          MoveSymbol(Symbol,Position,NewPos);
+          Position := NewPos;
+          LogPos.h := LogPos.h - 1;
+      END;
+   END;
+
+   PROCEDURE MoveRight(P:RefPlayerRecord);
+   { This procedure moves a player one square right (if possible) }
+   VAR NewPos: Point;
+   BEGIN
+       WITH P^ DO if NOT MazeMap[LogPos.v][LogPos.h+1] THEN BEGIN
+           NewPos.v := Position.v;
+           NewPos.h := Position.h + SSize;
+           MoveSymbol(Symbol, Position,NewPos);
+           Position := NewPos;
+           LogPos.h := LogPos.h + 1;
+       END;
+   END;
+
+   PROCEDURE DrawStatus;
+   { This procedure is used to draw the status of all players in the game.
+     It is used to create the window during updates. }
+   VAR i : Integer;
+       L,T: Integer;
+       tr: Rect;
+       ScoreStr: STR255;
+   BEGIN
+       T := DnRect.Bottom + KSpace;
+       L := LRect.Left;
+       {TextMode(srcXor);}
+       {TextSize(TSize);}
+       FOR i := 1 TO LastStatUsed DO BEGIN
+           IF StatLines[i] <> NIL THEN WITH StatLines[i]^ DO BEGIN
+               MoveTo(L,T+TSize);
+               DrawChar(Symbol);
+               MoveTo(L+ColSep,T+TSize);
+               DrawString(Name);
+               MoveTo(L+ColSep+MaxString,T+TSize);
+               NumToString(Score,ScoreStr);
+               DrawString(ScoreStr);
+               END;
+           T := T + TSize + 2;
+           END;
+   END;
+
+   PROCEDURE LabelButton(VAR R:Rect; S:Char);
+   { This procedure is used to draw the labls on the soft buttons }
+   BEGIN
+       TextMode(srcOr);
+       MoveTo(R.Left+KeyMidPoint.h,R.Top+KeyMidPoint.v);
+       DrawChar(S);
+       TextMode(srcXor);
+   END;
+
+
+   PROCEDURE DrawMaze;
+   { This procedure draws the maze, given the matrix defining it, along
+     with all symbols in the mazer. }
+   VAR
+        tr: Rect;
+        H,V,i: Integer;
+   BEGIN
+        SetRect(tr,LeftStart,UpStart,LeftStart+SSize,UpStart+SSize);
+        FOR V := 0 TO VMazeSize DO BEGIN
+            FOR H := 0 TO HMazeSize DO BEGIN
+                IF MazeMap[v][h] THEN FillRect(tr,black)
+                                 ELSE FillRect(tr,white);
+                tr.left := tr.right;
+                tr.right := tr.right + SSize;
+                END; { end of inner for }
+            tr.left := LeftStart;
+            tr.right := tr.left+SSize;
+            tr.top := tr.bottom;
+            tr.bottom := tr.bottom + SSize;
+            END;
+
+          {TextMode(srcXor);}
+          {TextSize(TSize);}
+          FOR i := 0 TO LastPlayer DO
+              IF Players[i] <> NIL THEN BEGIN
+                MoveTo(Players[i]^.Position.h, Players[i]^.Position.v);
+                DrawChar(Players[i]^.Symbol);
+                END;
+
+         DrawStatus;
+
+         { And set up the soft buttons on the screen }
+         FrameRect(LRect); FrameRect(RRect);FrameRect(UpRect);FrameRect(DnRect);
+         FrameRect(LFRect); FrameRect(RFRect);FrameRect(UFRect);FrameRect(DFRect);
+
+         LabelButton(LRect,'L');
+         LabelButton(RRect,'R');
+         LabelButton(UpRect,'U');
+         LabelButton(DnRect,'D');
+
+   END;
+
+   PROCEDURE SetUpMenus;
+   { Once-only initialization for menus }
+
+      VAR
+         i: INTEGER;
+
+      BEGIN
+         InitMenus; { initialize Menu Manager }
+         myMenus[1] := GetMenu(appleMenu);
+         AddResMenu(myMenus[1],'DRVR'); { desk accessories }
+         myMenus[2] := GetMenu(fileMenu);
+         myMenus[3] := GetMenu(MoveMenu);
+         myMenus[4] := GetMenu(autoMenu);
+         FOR i := 1 TO lastMenu DO InsertMenu(myMenus[i],0);
+         DrawMenuBar;
+      END; { of SetUpMenus }
+
+   PROCEDURE DoCommand(mResult: LongInt);
+
+      VAR
+         name: STR255;
+         NewPos: Point;
+
+      BEGIN
+         theMenu := HiWord(mResult); theItem := LoWord(mResult);
+         CASE theMenu OF
+
+            appleMenu:
+               BEGIN
+               GetItem(myMenus[1],theItem,name);
+               refNum := OpenDeskAcc(name);
+               END;
+
+            fileMenu: BEGIN
+                         doneFlag := TRUE; { Quit }
+                         ReportPlace(Players[Me],QuitIndicator);
+                      END;
+
+            MoveMenu:
+                  BEGIN
+                  SetPort(myWindow);
+                  CASE theItem OF
+
+                     1: BEGIN { Down }
+                            MoveDown(Players[Me]);
+                        END;
+
+                     2:	 BEGIN {Up }
+                            MoveUp(Players[Me]);
+                         END;
+
+                     3: BEGIN { left }
+                            MoveLeft(Players[Me]);
+                        END;
+
+                     4: BEGIN { right}
+                            MoveRight(Players[Me]);
+                        END;
+
+                  END; { of item case }
+                  ReportPlace(Players[Me],NotHitIndicator);
+               END; { of moveMenu }
+
+            autoMenu: BEGIN
+                      CASE theItem OF
+                      1: BEGIN PilotOn := NOT PilotOn;
+                               IF PilotOn THEN BEGIN
+                                               SetItem(MyMenus[4],1,'Stop Autopilot');
+                                               APTime := TickCount;
+                                               END
+                                          ELSE BEGIN
+                                              SetItem(MyMenus[4],1,'Start Autopilot');
+                                          END;
+                         END;
+                       2: BEGIN
+                             UseSoundeEffects := NOT UseSoundEffects;
+                             CheckItem(MyMenus[4],2,UseSoundEffects);
+                             IF UseSoundEffects THEN { Just load it }
+                                 TalkDummy :=  mSpeak('',0,0,0);
+
+                          END;
+
+                       3: BEGIN { Display received packets }
+                              DoDisplay := NOT DoDisplay;
+                              CheckItem(MyMenus[4],3,DoDisplay);
+                          END;
+
+                       4: BEGIN { Stop Listening }
+                             DoListen := NOT DoListen;
+                             IF DoListen
+                                 THEN SetItem(MyMenus[4],4,'Stop Listening')
+                                 ELSE SetItem(MyMenus[4],4,'Start Listening');
+                          END;
+
+                       5: BEGIN { Stop Sending }
+                             DoSend := NOT DoSend;
+                             IF DoSend
+                                 THEN SetItem(MyMenus[4],5,'Stop Sending')
+                                 ELSE SetItem(MyMenus[4],5,'Start Sending');
+                          END;
+
+                       6: BEGIN { Remove Inactive players }
+                             DoRemove := NOT DoRemove;
+                             IF DoRemove
+                                 THEN SetItem(MyMenus[4],6,'Keep Inactive Players')
+                                 ELSE SetItem(MyMenus[4],6,'Remove Inactive Players');
+                          END;
+
+                       7: BEGIN { Send Bad Packet }
+                             SendBadPkt;
+                          END;
+                      END;
+                      END;
+
+         END; { of menu case }
+         HiliteMenu(0);
+
+      END; { of DoCommand }
+
+   PROCEDURE DoKeyEvent(c:CHAR);
+   { Translate keyboard keys into commands }
+   BEGIN
+       CASE c OF
+          'a','A': FireLeft(Players[Me]);
+          'd','D': FireRight(Players[Me]);
+          'w','W': FireUp(Players[Me]);
+          'x','X': FireDown(Players[Me]);
+          'h','H': MoveLeft(Players[Me]);
+          'k','K': MoveRight(Players[Me]);
+          'u','U': MoveUp(Players[Me]);
+          'm','M': MoveDown(Players[Me]);
+       END;
+       ReportPlace(Players[Me],NotHitIndicator);
+   END;
+
+   PROCEDURE RemovePlayer(ID:Byte);
+   { Player ID has gone away by timeout or by request, so recover
+     the player record and the status line. Also wipe him and his
+     bullets from the maze. }
+   BEGIN
+       IF Players[ID] <> NIL THEN BEGIN
+           { he really existed! }
+           WITH Players[ID]^ DO BEGIN
+               { Get rid of his player marker }
+               FirstSymbol(Symbol,Position);
+               { Get rid of any bullets }
+               IF FireDir <> None THEN FirstSymbol(BulletSymbol,BulletPos);
+               { Delete his status line from display }
+               EraseStatus(Players[ID],PlayerLine[ID]);
+               END;
+           StatLines[PlayerLine[ID]] := NIL; { Release status line }
+           PlayerLine[ID] := 0;
+           DisposPtr(PTR(Players[ID]));
+           Players[ID] := NIL;
+           END;
+   END;
+
+
+   CONST
+       HitAnotherScore =  20;
+       HitByAnother    = -10;
+
+   PROCEDURE ProcessPkt;
+   VAR tmpBuf: LongReport;
+       i:  Integer;
+       CurSize: Integer;
+       OldPlace: Point;
+       RcdBad: Boolean;
+       NodeFrom, NodeTo: Byte;
+       ProtUsed: Byte;
+
+       PROCEDURE AddNewPlayer;
+       { Create a new player based on received packet }
+       BEGIN
+           InitPlayer(tmpBuf.UniqueID);
+           IF Players[tmpBuf.UniqueID] <> NIL THEN BEGIN
+             WITH Players[tmpBuf.UniqueID]^ DO BEGIN
+                Symbol := tmpBuf.Symbol;
+                UniqueID:= tmpBuf.UniqueID;
+                FireDir := tmpBuf.FireDir;
+                Position:= tmpBuf.Position;
+                LogPos := tmpBuf.LogPos;
+                Score := tmpBuf.Score;
+                BulletPos := tmpBuf.BulletPos;
+                LogBulletPos := tmpBuf.LogBulletPos;
+                IF CurSize = sizeof(LongReport)
+                      THEN Name := tmpBuf.Name
+                      ELSE Name := '';
+                FirstSymbol(Symbol,Position);
+                IF FireDir <> None THEN FirstSymbol(BulletSymbol,BulletPos);
+                END;
+             FirstStatus(Players[tmpBuf.UniqueID]);
+           END;
+
+       END;
+
+       FUNCTION ValidPkt: BOOLEAN;
+       { See if the received packet is legal }
+       BEGIN
+           ValidPkt := TRUE;
+           IF RcdBad THEN ValidPkt := FALSE
+           ELSE IF ProtUsed <> MazeProtocol THEN ValidPkt := FALSE
+           ELSE IF NodeTo <> $FF THEN ValidPkt := FALSE
+           ELSE WITH tmpBuf DO BEGIN
+               IF       NodeFrom <> UniqueID THEN ValidPkt := FALSE
+               ELSE IF ( ORD(FireDir) < ORD(Up) ) OR
+                       ( ORD(FireDir) > ORD(None) ) THEN ValidPkt := FALSE
+               ELSE IF ( ORD(LogPos.h) < -1 ) OR
+                       ( ORD(LogPos.h) > HMazeSize ) THEN ValidPkt := FALSE
+               ELSE IF ( ORD(LogPos.v) < -1 ) OR
+                       ( ORD(LogPos.v) > VMazeSize ) THEN ValidPkt := FALSE
+               ELSE IF ( ORD(LogBulletPos.h) < -1 ) OR
+                       ( ORD(LogBulletPos.h) > HMazeSize ) THEN ValidPkt := FALSE
+               ELSE IF ( ORD(LogBulletPos.v) < -1 ) OR
+                       ( ORD(LogBulletPos.v) > VMazeSize ) THEN ValidPkt := FALSE
+               END;
+       END;
+
+   BEGIN
+       { Get the data }
+       tmpBuf := InBuf;
+       { Reenable the read }
+       WITH InputH^^ DO BEGIN
+            RcdBad := ( abResult <> noErr);
+            CurSize := lapActCount;
+            NodeFrom := lapAddress.srcNodeID;
+            NodeTo := lapAddress.dstNodeId;
+            ProtUsed := lapAddress.LAPProtType;
+            lapAddress.LAPProtType := MazeProtocol;
+            lapAddress.dstNodeID := $FF;
+            lapReqCount := sizeof(LongReport);
+            InBuf.Size := sizeof(LongReport);
+            lapDataPtr := @InBuf;
+            END;
+
+        RetStatus := LAPRead(InputH,AsyncCall);
+
+        IF NOT DoListen THEN EXIT(ProcessPkt);
+
+        IF DoDisplay THEN DisplayPkt(@tmpBuf);
+
+        { See if the packet is believeable }
+       IF NOT ValidPkt THEN BEGIN
+           SysBeep(5);
+           EXIT(ProcessPkt);
+           END;
+
+        { Mark this guy as still alive }
+        LastSeen[tmpBuf.UniqueID] := TickCount;
+
+        { See if you've hit someone }
+        IF tmpBuf.HitBy = Players[Me]^.UniqueID THEN BEGIN
+            { Yep, gotcha }
+            UpDateStatus(Players[Me],Players[Me]^.Name,
+                         Players[Me]^.Score + HitAnotherScore);
+            Players[Me]^.Score := Players[Me]^.Score + HitAnotherScore;
+            TurnOffBullet(Players[Me]);
+            IF UseSoundEffects THEN TalkDummy := mSpeak('/gAAt \yAA',5,5,5);
+            END;
+
+        { See if you've been hit }
+        IF (tmpBuf.LogBulletPos.h = Players[Me]^.LogPos.h) AND
+           (tmpBuf.LogBulletPos.v = Players[Me]^.LogPos.v)
+                THEN BEGIN
+                UpDateStatus(Players[Me],Players[Me]^.Name,
+                             Players[Me]^.Score + HitByAnother);
+                Players[Me]^.Score := Players[Me]^.Score + HitByAnother;
+                { Pick a new random place }
+                OldPlace := Players[Me]^.Position;
+                PlacePlayer(Players[Me]);
+                MoveSymbol(Players[Me]^.Symbol,OldPlace,Players[Me]^.Position);
+                { Send a Hit-by packet }
+                ReportPlace(Players[Me],tmpBuf.UniqueID);
+                IF UseSoundEffects THEN TalkDummy := mSpeak('UHps',5,5,5);
+                END;
+
+        { See if someone is quiting }
+        IF tmpBuf.HitBy = QuitIndicator THEN BEGIN
+            RemovePlayer(tmpBuf.UniqueID);
+            EXIT(ProcessPkt); {He's gone, so nothing to update }
+            END;
+
+        { See if we already know this player }
+        IF PlayerLine[tmpBuf.UniqueID] <> 0 THEN
+            WITH StatLines[PlayerLine[tmpBuf.UniqueID]]^ DO BEGIN
+                { Found 'em, now update info }
+                MoveSymbol(Symbol,Position,tmpBuf.Position);
+                IF (FireDir <> None) AND (tmpBuf.FireDir =  None) THEN
+                    FirstSymbol(BulletSymbol,BulletPos)
+                ELSE IF (FireDir =  None) AND (tmpBuf.FireDir <> None) THEN
+                    FirstSymbol(BulletSymbol,tmpBuf.BulletPos)
+                ELSE IF (FireDir <> None) AND (tmpBuf.FireDir <> None) THEN
+                    MoveSymbol(BulletSymbol,BulletPos,tmpBuf.BulletPos);
+                FireDir := tmpBuf.FireDir;
+                Position := tmpBuf.Position;
+                LogPos := tmpBuf.LogPos;
+                BulletPos := tmpBuf.BulletPos;
+                LogBulletPos := tmpBuf.LogBulletPos;
+                IF CurSize = sizeof(LongReport) THEN
+                    UpDateStatus(StatLines[PlayerLine[tmpBuf.UniqueID]],
+                             tmpBuf.Name,tmpBuf.Score)
+                ELSE
+                    UpDateStatus(StatLines[PlayerLine[tmpBuf.UniqueID]],
+                             StatLines[PlayerLine[tmpBuf.UniqueID]]^.Name,
+                             tmpBuf.Score);
+                Score := tmpBuf.Score;
+                EXIT(ProcessPkt);
+                END; { end of if }
+
+        { Not already in the list, so add it }
+        AddNewPlayer;
+
+   END;
+
+
+   PROCEDURE CheckNetEvent;
+   { This checks to see if a packet reeception did not post an event }
+   BEGIN
+
+       IF (InputH^^.abResult <> 1) THEN ProcessPkt;
+
+   END;
+
+   PROCEDURE CheckBullet;
+   { This is the routine that periodically updates the progress of
+     a fired bullet as it makes it way across the screen }
+   VAR NewLPos:MazePoint;
+       NewPos: Point;
+   BEGIN
+       IF Players[Me]^.FireDir <> None THEN BEGIN
+           IF TickCount > BulletUpdate THEN WITH Players[Me]^ DO BEGIN
+               { Figure out which direction, see if wall in the way,
+                 if not, move it and update status }
+               NewLPos := LogBulletPos;
+               CASE FireDir OF
+                  UpFire:     NewLPos.v := NewLPos.v - 1;
+                  DownFire:   NewLPos.v := NewLPos.v + 1;
+                  LeftFire:   NewLPos.h := NewLPos.h - 1;
+                  RightFire:  NewLPos.h := NewLPos.h + 1;
+               END; { of case }
+               {See if new position is legal }
+               IF MazeMap[NewLPos.v][NewLPos.h] THEN BEGIN
+                   { Bullet hit wall of maze, so its finished }
+                   TurnOffBullet(Players[Me]);
+                   BulletUpDate := TickCount + TickCount;
+                   END
+               ELSE BEGIN
+                   { Bullet is still running, so find next place and
+                     update time for update }
+                    NewPos := BulletPos;
+                    CASE FireDir OF
+                        UpFire:	    NewPos.v := NewPos.v - SSize;
+                        DownFire:   NewPos.v := NewPos.v + SSize;
+                        LeftFire:   NewPos.h := NewPos.h - SSize;
+                        RightFire:  NewPos.h := NewPos.h + SSize;
+                    END;
+                    MoveSymbol(BulletSymbol,BulletPos,NewPos);
+                    BulletPos := NewPos;
+                    LogBulletPos := NewLPos;
+                    BulletUpdate := BulletUpdate + TickperSquare;
+                   END;
+               ReportPlace(Players[Me],NotHitIndicator);
+               END;
+           END;
+   END;
+
+
+
+   PROCEDURE CheckPilot;
+   { This is the procedure used for running in autopilot mode. It's not
+     very smart, it is used only for testing purposes. }
+   VAR RetStatus: OSErr;
+   BEGIN
+       IF PilotOn THEN IF APTime < TickCount THEN BEGIN
+           { Time to make a move! }
+           REPEAT WhatToDo := Random MOD 5; UNTIL WhatToDo >= 0;
+           CASE WhatToDo OF
+              0: {Do nothing };
+              1: {move up}      MoveUp(Players[Me]);
+              2: {move down}    MoveDown(Players[Me]);
+              3: {move left}    MoveLeft(Players[Me]);
+              4: {move right}   MoveRight(Players[Me]);
+           END;
+           REPEAT WhatToDo := Random MOD 5; UNTIL WhatToDo >= 0;
+           CASE WhatToDo OF
+              0: {Do nothing };
+              1: {shoot up}	 FireUp(Players[Me]);
+              2: {shoot down}	 FireDown(Players[Me]);
+              3: {shoot left}	 FireLeft(Players[Me]);
+              4: {shoot right}	 FireRight(Players[Me]);
+           END;
+           APTime := APTime + APWait;
+           END;
+   END;
+
+   CONST
+       DeadTicks = 60 * 30; { 60 ticks per second, 30 seconds idle }
+   PROCEDURE CheckDead;
+   { This procedure watches out for dead players -- quit or walked away }
+   VAR
+       OldDeadCheck: LongInt;
+       i: Integer;
+   BEGIN
+       IF NOT DoRemove THEN EXIT(CheckDead);
+
+       LastSeen[Me] := TickCount;
+       IF NextDeadCheck < TickCount THEN BEGIN
+           { Timer elapsed, go look at who has gone away }
+           OldDeadCheck := NextDeadCheck - DeadTicks;
+           {FOR i := 0 TO 255 DO
+               IF (Players[i] <> NIL) AND (LastSeen[i] < OldDeadCheck)
+                   THEN RemovePlayer(i);}
+           FOR i := 1 To LastStatUsed DO
+               IF StatLines[i] <> NIL THEN
+                   IF LastSeen[StatLines[i]^.UniqueID] < OldDeadCheck THEN
+                       RemovePlayer(StatLines[i]^.UniqueID);
+           NextDeadCheck := TickCount + DeadTicks;
+           END;
+   END;
+
+   BEGIN { main program }
+      InitGraf(@thePort);
+      InitFonts;
+      FlushEvents(everyEvent,0);
+      InitWindows;
+      SetUpMenus;
+      TEInit;
+      InitDialogs(NIL);
+      InitCursor;
+
+      screenRect := screenBits.bounds;
+      SetRect(dragRect,4,24,screenRect.right-4,screenRect.bottom-4);
+      doneFlag := FALSE;
+
+      myWindow := GetNewWindow(256,@wRecord,POINTER(-1));
+      SetPort(myWindow);
+
+      pRect := thePort^.portRect;
+      InsetRect(pRect,4,0);
+      {hTE := TENew(pRect,pRect);}
+      UpdateCnt := 0;
+      InitMaze;
+      PilotOn := FALSE;
+
+      REPEAT
+         SystemTask;
+         {TEIdle(hTE);}
+         if GetNextEvent(everyEvent,myEvent) then
+         CASE myEvent.what OF
+
+            mouseDown:
+               BEGIN
+               code := FindWindow(myEvent.where,whichWindow);
+               CASE code OF
+
+                  inMenuBar: DoCommand(MenuSelect(myEvent.where));
+
+                  inSysWindow: SystemClick(myEvent,whichWindow);
+
+                  inDrag: DragWindow(whichWindow,myEvent.where,dragRect);
+
+                  inGrow,inContent:
+                     BEGIN
+                     IF whichWindow<>FrontWindow THEN
+                        SelectWindow(whichWindow)
+                     ELSE
+                        BEGIN
+                        GlobalToLocal(myEvent.where);
+                        IF PtInRect(myEvent.where,LFRect) THEN BEGIN
+                            InvertRect(LFRect);
+                            ButtonSelected := LeftFire;
+                            FireLeft(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,RFRect) THEN BEGIN
+                            InvertRect(RFRect);
+                            ButtonSelected := RightFire;
+                            FireRight(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,UFRect) THEN BEGIN
+                            InvertRect(UFRect);
+                            ButtonSelected := UpFire;
+                            FireUp(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,DFRect) THEN BEGIN
+                            InvertRect(DFRect);
+                            ButtonSelected := DownFire;
+                            FireDown(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,LRect) THEN BEGIN
+                            InvertRect(LRect);
+                            ButtonSelected := Left;
+                            MoveLeft(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,RRect) THEN BEGIN
+                            InvertRect(RRect);
+                            ButtonSelected := Right;
+                            MoveRight(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,UpRect) THEN BEGIN
+                            InvertRect(UpRect);
+                            ButtonSelected := Up;
+                            MoveUp(Players[Me])
+                            END
+                        ELSE IF PtInRect(myEvent.where,DnRect) THEN BEGIN
+                            InvertRect(DnRect);
+                            ButtonSelected := Down;
+                            MoveDown(Players[Me])
+                            END;
+                        ReportPlace(Players[Me],NotHitIndicator);
+                        END;
+                     END;
+
+               END; { of code case }
+               END; { of mouseDown }
+
+            mouseUp:
+               BEGIN
+               code := FindWindow(myEvent.where,whichWindow);
+               CASE code OF
+
+                  inGrow,inContent:
+                     BEGIN
+                     IF whichWindow=FrontWindow THEN
+                        BEGIN
+                           CASE ButtonSelected OF
+                               Left: InvertRect(LRect);
+                               Right: InvertRect(RRect);
+                               Down: InvertRect(DnRect);
+                               Up: InvertRect(UpRect);
+                               LeftFire: InvertRect(LFRect);
+                               RightFire: InvertRect(RFRect);
+                               DownFire: InvertRect(DFRect);
+                               UpFire: InvertRect(UFRect);
+                               None:;
+                           END;
+                           ButtonSelected := None;
+                        END;
+                     END;
+
+               END; { of code case }
+               END; { of mouseDown }
+
+            keyDown,autoKey: DoKeyEvent(CHR(myEvent.message MOD 256));
+
+            activateEvt:;
+
+            NetEvt: CheckNetEvent;
+
+            updateEvt:
+               BEGIN
+               SetPort(myWindow);
+               BeginUpdate(myWindow);
+               EraseRect (thePort^.visRgn^^.rgnBBox);
+               DrawMaze;
+               IF FirstActivate THEN BEGIN
+                   FirstStatus(Players[Me]);
+                   FirstActivate := FALSE;
+                   END;
+               EndUpdate(myWindow);
+               END; { of updateEvt }
+
+         END; { of event case }
+
+         { Check on the bullets }
+         CheckBullet;
+         { Check on the autopilot }
+         CheckPilot;
+         { Check on players that have done away }
+         CheckDead;
+
+         UpdateCnt := UpdateCnt + 1;
+         IF UpdateCnt > UpdateRate THEN BEGIN
+                UpdateCnt := 0;
+                ReportPlace(Players[Me],NotHitIndicator);
+                CheckNetEvent;
+                END;
+
+      UNTIL doneFlag;
+      RetStatus := LAPCloseProtocol(MazeProtocol);
+   END.
+
+27-Sep-85 20:42:45-EDT,4628;000000000000
+Return-Path: <mss%dartmouth.csnet@CSNET-RELAY.ARPA>
+Received: from CSNET-RELAY.ARPA by C.CS.CMU.EDU with TCP; Fri 27 Sep 85 20:42:41-EDT
+Received: from dartmouth by csnet-relay.csnet id aa05329; 27 Sep 85 20:01 EDT
+Received: by dartmouth.CSNET (4.12/1.20)
+	id AA06108; Fri, 27 Sep 85 18:40:30 edt
+Date: 27 Sep 1985 18:39-EST
+From: mss%dartvax%dartmouth.csnet@CSNET-RELAY.ARPA
+Subject: Re: MazeWar and RCMP
+To: "Ralph W. Hyre Jr." <Ralph.Hyre@c.cs.cmu.edu>
+Message-Id: <496708793/mss@dartvax>
+In-Reply-To: "Ralph W. Hyre Jr."'s message of Thu 26 Sep 85 180122-EDT
+
+*  EditR -- Resource input for small sample application
+*		 Written by Macintosh Technical Support
+* SK 6/18  Made Edit menu items standard, added menu 1
+*
+mss/maze.Rsrc
+
+Type MENU
+  ,1
+  \14
+
+  ,256
+  File
+    Quit
+
+  ,257
+  Move
+    Down
+    Up
+    Left
+    Right
+
+  ,258
+  Player Control
+    Start Autopilot
+    Sound Effects
+    Display Received Packets
+    Stop Listening
+    Stop Sending
+    Keep Inactive Players
+    Send Bad Packet
+
+
+
+Type WIND
+  ,256
+  CS 88 New Improved Maze Game
+  40 20 330 490
+  Visible NoGoAway
+  0
+  0
+
+Type DLOG
+ ,1(4)
+ 30 20 170 490
+ Visible 1 NoGoAway 0
+ 3
+
+Type DITL
+  ,3(4)
+  7
+  BtnItem Enabled
+    20 110  40 190
+OK
+
+  BtnItem Enabled
+    20 260 40 340
+Cancel
+
+  EditText Disabled
+     55 205 70 350
+Random User
+
+  EditText Disabled
+     80 205 95 350
+A
+
+  StatText Disabled
+     105 10 135 350
+
+
+  StatText Disabled
+     55 10 70 190
+Player Name:
+
+  StatText Disabled
+     80 10 95 200
+Player Symbol (1 symbol):
+
+Type DLOG
+ ,2(4)
+ 30 20 320 490
+ Visible 1 NoGoAway 0
+ 4
+
+Type DITL
+  ,4(4)
+  33
+  BtnItem Enabled
+    20 230  40 340
+OK
+
+  StatText Disabled
+    20 110 35 200
+Field 1
+
+  StatText Disabled
+    40 110 55 200
+Field 2
+
+  StatText Disabled
+    60 110 75 200
+Field 3
+
+  StatText Disabled
+    80 110 95 200
+Field 4
+
+  StatText Disabled
+    100 110 115 200
+Field 5
+
+  StatText Disabled
+    120 110 135 200
+Field 6
+
+  StatText Disabled
+    140 110 155 200
+Field 7
+
+  StatText Disabled
+    160 110 175 200
+Field 8
+
+  StatText Disabled
+    180 110 195 200
+Field 9
+
+  StatText Disabled
+    100 350 115 410
+Field 10
+
+  StatText Disabled
+    120 350 135 410
+Field 11
+
+  StatText Disabled
+    140 350 155 410
+Field 12
+
+  StatText Disabled
+    160 350 175 410
+Field 13
+
+  StatText Disabled
+    180 350 195 410
+Field 14
+
+  StatText Disabled
+    200 110 215 350
+Field 15
+
+  StatText Disabled
+    20 10 35 100
+Size
+
+  StatText Disabled
+    40 10 55 100
+Symbol
+
+  StatText Disabled
+    60 10 75 100
+UniqueID
+
+  StatText Disabled
+    80 10 95 100
+FireDir
+
+  StatText Disabled
+    100 10 115 100
+Position.H
+
+  StatText Disabled
+    120 10 135 100
+Position.V
+
+  StatText Disabled
+    140 10 155 100
+LogPos.H
+
+  StatText Disabled
+    160 10 175 100
+LogPos.V
+
+  StatText Disabled
+    180 10 195 100
+Score
+
+  StatText Disabled
+    100 230 115 340
+BulletPos.H
+
+  StatText Disabled
+    120 230 135 340
+BulletPos.V
+
+  StatText Disabled
+    140 230 155 340
+LogBulletPos.H
+
+  StatText Disabled
+    160 230 175 340
+LogBulletPos.V
+
+  StatText Disabled
+    180 230 195 340
+HitBy
+
+  StatText Disabled
+    200 10 215 100
+Name
+
+  BtnItem Enabled
+    50 230  70 340
+Stop Display
+
+  StatText Disabled
+    235 10 280 420
+Display of latest packet. Hit "OK" to continue reading packets and "Stop Display" to disbale the packet reading feature.
+
+Type ICN# = HEXA
+  ,128
+* Little Maze
+  FFFFFFFF
+  FFFFFFFF
+  CC066663
+  CC066663
+  CFE66603
+  CFE66603
+  CCC66663
+  C0C60663
+  C0C60663
+  CC067E63
+  CC067E63
+  CFE60663
+  CFE60663
+  CC060063
+  CC060063
+  CFE7F863
+  CFE7F863
+  CC000063
+  CC000063
+  FFFFFE63
+  FFFFFE63
+  C0C00663
+  C0C00663
+  CFCFFE03
+  CFCFFE03
+  C0C00603
+  C0C0067F
+  CCC3067F
+  CC030003
+  CC030003
+  FFFFFFFF
+  FFFFFFFF
+* and the mask
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+  FFFFFFFF
+
+type FREF = HEXA
+  ,128
+  4150504C
+  0000
+
+Type BNDL = HEXA
+  ,128
+  4D415A45 0000
+  0001
+  49434E23 0000
+  0000 0080
+  46524546 0000
+  0000 0080
+
+Type MAZE = STR
+,0
+Maze Version 1.0    - 12 December 83
+
+Type CODE
+ mss/mazeL,0
+-- 
+				- Ralph
+Internet: ralphw@c.cs.cmu.edu (cmu-cs-c.arpa)
+Usenet: ralphw@mit-eddie.uucp
+Fidonet: Ralph Hyre at Fido #385 Pitt-Bull (or maybe Net 129, node 0)
+Snail Mail: don't bother
+
+

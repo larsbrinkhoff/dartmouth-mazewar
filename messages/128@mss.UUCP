@@ -1,0 +1,73 @@
+From 984890846995870922
+X-Google-Language: ENGLISH,ASCII-7-bit
+X-Google-Thread: 152df8,fa08cda1d9e66258,start
+X-Google-Attributes: gid152df8,public
+X-Google-ArrivalTime: 1986-07-17 17:04:25 PST
+Relay-Version: version B 2.10 5/3/83; site utzoo.UUCP
+Path: utzoo!watmath!clyde!caip!topaz!nike!ucbcad!ucbvax!hplabs!felix!scgvaxd!mss!jpj
+From: jpj@mss.UUCP (J. P. Jenal)
+Newsgroups: net.micro.mac
+Subject: Re: AppleTalk Blues...MazeWars & BumperShips1.1
+Message-ID: <128@mss.UUCP>
+Date: Thu, 17-Jul-86 20:04:25 EDT
+Article-I.D.: mss.128
+Posted: Thu Jul 17 20:04:25 1986
+Date-Received: Sun, 20-Jul-86 06:32:17 EDT
+Distribution: na
+Organization: Mayfield Senior School, Pasadena, CA
+Lines: 52
+
+Greetings - well I've learned several things of late, let me share them
+with those of you who were as mis-informed as I.  
+
+First off, BumperShips1.1 *DOES NOT TALK APPLETALK.*  I was informed by
+someone involved w/same that it only works via direct connection -
+AppleTalk may be added at a later time - if the interest warrants it.
+(Side note - I would think that adding AT support would greatly boost the
+interest in the game - otherwise, people will probably ignore it.)
+
+(Note - if you already have MazeWars running on your machines, just hit n.)
+
+Next - I got MazeWars to finally work!  I'm not really sure what was
+needed, but let me simply describe exactly what my current (working!) setup
+is.  I have two identical disks, with the following contents:
+
+    System Folder - contains:
+	System file: version 3.1
+	Finder: version 5.2
+	AppleTalk ImageWriter
+
+    MazeWar Folder - contains:
+	Eyeballs
+	Title
+	ScreenData
+	Mw
+
+(The first three items in the MazeWar Folder are all MacPaint files,
+the last is the MazeWars application.)
+
+Desk Accessories - Key Caps, Control Panel & Chooser.
+
+The *printer port* is used for the AppleTalk connection.  (I am using 512k
+Macs, old ROM.)
+
+Under the Control Panel, AppleTalk is marked connected.
+    This seems to be a key.  Even though AppleTalk is indicated as being
+    connected, I find that I must still click on connected each time before
+    starting up MazeWars.  This precludes making MazeWars the startup
+    application - and is probably a bug.  (Does anyone know why I would
+    have to do this each time?)  At any rate, if I don't re-initialize the
+    AppleTalk connection this way, before *every game*, nothing useful
+    happens.
+
+When starting up MazeWars, simultaneity doesn't matter in the least.  Just
+go ahead and begin when you want - as others join, they are added to the
+game.
+
+Hope this helps some - thanks to all who responded...
+Cheers...
+
+	Jim Jenal		(aka ...!scgvaxd!mss!jpj)
+	Mayfield Senior School	( "  ...!ihnp4!mss!jpj)
+
+

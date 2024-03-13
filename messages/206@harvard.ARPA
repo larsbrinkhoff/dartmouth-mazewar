@@ -1,0 +1,87 @@
+From 5189134829547589800
+X-Google-Language: ENGLISH,ASCII-7-bit
+X-Google-Thread: 166c8a,66603261448be2e3,start
+X-Google-Attributes: gid166c8a,public
+X-Google-ArrivalTime: 1985-06-22 12:33:05 PST
+Relay-Version: version B 2.10 5/3/83; site utzoo.UUCP
+Posting-Version: version B 2.10.2 9/18/84; site harvard.ARPA
+Path: utzoo!watmath!clyde!burl!ulysses!mhuxr!mhuxn!ihnp4!drutx!mtuxo!mtunh!mtung!mtunf!orion!caelum!ariel!vax135!timeinc!phri!pesnta!amd!vecpyr!lll-crg!gymble!umcp-cs!seismo!harvard!kevin
+From: kevin@harvard.ARPA (Kevin Crowston)
+Newsgroups: net.sources.mac
+Subject: Start up programme for Mazewars
+Message-ID: <206@harvard.ARPA>
+Date: Sat, 22-Jun-85 15:33:05 EDT
+Article-I.D.: harvard.206
+Posted: Sat Jun 22 15:33:05 1985
+Date-Received: Sat, 29-Jun-85 00:43:22 EDT
+Distribution: net
+Organization: Aiken Computation Laboratory, Harvard
+Lines: 65
+
+
+A while back I posted a short little assembler programme I was given
+that allowed me to run Mazewars on a 128K Mac.  This is the hex
+version of that programme.
+
+The programme opens up the AppleTalk resources necessary for Mazewars
+and then launches a programme called MW.  To use it, put it on your
+Mazewars disk and rename the Mazewars programme MW.  Then simply
+launch this programme.  It will run for a bit and then the first
+Mazewars screen will appear.
+
+Kevin Crowston
+---------------
+
+(This file must be converted with BinHex 4.0)
+
+:"fCTH#eYF(!!39"36!#3$!X!1i`!N!3"!*!$#3#3!`J!N!3q!*$c'!#3!bJ!!!%
+!N!3)!*!$)!%k2c`!!DR`!!!'KJ#3!`%!N2m!N"SS!!3"8J(m!*!%!5S"q!#3%NM
+Rrrj"q[r!))iK6`!%5'hrr+KZU2kT%UN`3UHTHkR-6VS%lN(krk!X8#jS!!4-hhr
+rUI4)jq$!3UG#TdKkrk![#&$R3QF[22q3"&(R3UHT%d(krkJJPkKc3UHSf%(krii
+JPdKkri#Shc!m!!3b2!!!0$`!#8kk!$T#Tb!m!!$rrk!b)"mr2!!'2c`!$kL6U&"
+-h`-(6R9)jq$!5(Vr5+LM2c`!"Mmm!!qSNdcI!`G1G8MRJ)!r!+L(2`'SL$m#U)T
+)H[mZU)X`1[mSd(Vr*Y"krbC"q[mN-)"-h`%"6R8!N!a"q[rq51"J3$mm!#K)H[l
+8UA""q[l15P"RjN+!%#J!"8kk!"""q[r160J#"Nje!*!%51GR`#S!5(Vrp+LD2MV
+rm$`krqS-"3!)CJ!!2Ja(!!CR!!#'3IVqVM!S!!4%3$m!2c`!!+L82`F`"Y"krTS
+r!*akrT+HH[k52`Fr"L"2,`LSSe"26[S!8J`&!!eR!!!+$%F"lQd!!$jG4d4(2`G
+"q[jX2a#SP!a'!4YY!!!S5(Vq5$mm!!""q[j82a"%9d(krN![%+M[2c`!!%(krN!
+r%%4AU*3r"DL$)!9-h`2Q6R8r!"!m!!e1Z[p)-"p1G8MRi-"+3'`14%!r!"!m!#e
+1Z[m`-"p)3%*!5%"1ZJ!)60m$"djeJI`!#NT!C`!!%#m!!S!!!2rr6VVrl#!I5%!
+'!!!`6VVqr%je51IJ`%U!E!j%J#m!%$`!,8kkrZBJ(dkk!!K-h`-(6R8L2!#3!`T
+1ZJ'U5S"R!!!+,`&1Z[rX)KmJ!3B!!$"1Z[ki6R9)jhL!3IVm9Nkk!+j`!(3!&M`
+!!"Jm!!%8''F`$!)!,@B-$!-!!@I`'$`!!'$U$!)!-'hN$!)!1@lH&M`!!F(m!!S
+%3J!`d%*1q[r1$!3!!@F#4%"-h`%H6R9)jhL!3IVlr%kk!&4`!(3!&M`!!"Jm!!%
+8''Fd$!)!,@B-$!-!!@I`'$`!!'$U$!)!-'hN$!)!1@lH&M`!!5)!ji$MJG#""%)
+!-0##6[VrbJ`%!!&R!N5!60m"(Nje51I`i%*$*%K1Z[h!$!!!$@F!!$3-!!!)CJ!
+!$NT$CqK#)P0$6[VriJa$!2pQ!!!36VVpQ!`!!!eQpNlk!!T53a6!6[Vra%)560m
+($dje51H!J"!BC`!!#NkkrD*1q[rd60m"!8je51I`m#4)*NK+'N)$6VVp9J`!!!e
+R!!!d$!!!#'B!!!j+!fIS3L*6!dlkrq)-!`$rCJ!!%%kkr5i-!!!0C[C1qJ!+8J-
+8`%lkrm3@JdcI$`p1G8MRN!#!&KK+!fF!!!i3'%kkr646!dlkrr"-h`%*6R9+J@i
++C`C%J@%%4)"1G8U!EJT%J'%'4)"%J8je$)%!!2rrBebbJ'F)Ba!L!%+!6R9#J5!
+m!*!$!8je51Fi!#3"3N*)3P+#*J!S!5)#B6)L"),#J-%#J!!!rrmL"#3%5%,#`-6
+!5%,5JT+$BJT%JEL"BJK5J'$N8i"Ji%cI!"a1G8LRS!"#3%K!J-%d!$!IJ-&)3%+
+"-J!`!NK!0"p1G3488P9&"8C"6&0&!#m)3IVrp3`!N!0R"%(krqC1Z[mQ)&p1G4!
+`-6)c0$8f0cJj38*$4%9'!%MRi)!L!1#C0$`!!@!B51IJJ#)!5%%d2!!$B!T)jq#
+!)J!d2!!(3IVraqQC%!%#3!!2%$!!!%kkr"T4b[rZ60m""djeR[`!-L"23LJ!'d2
+k!#3K53!53QJ!&U!!h[`!-Pe2)%p$qJ!6)8N!!%*S!!5Tmdje"#j08&!#6AF!N*F
+S!!3"8J(m!*!%!5S"q!#3%NMRrrj"q[r!))iK6`!%5'hrr+KZU2kT%UN`3UHTHkR
+-6VS%lN(krk!X8#jS!!4-hhrrUI4)jq$!3UG#TdKkrk![#&$R3QF[22q3"&(R3UH
+T%d(krkJJPkKc3UHSf%(kriiJPdKkri#Shc!m!!3b2!!!0$`!#8kk!$T#Tb!m!!$
+rrk!b)"mr2!!'2c`!$kL6U&"-h`-(6R9)jq$!5(Vr5+LM!!!"!*!$#3#3!`J!N!3
+q!*!*(!!q!!"$6d4&!!%!#J!!rrmJ!*!)!Irr)!!!(!#3%%(krrj)i'"!2c`!+%K
+krY5TF%(krXj+8'IQ3S!3+!!&6VS!%%(krmj-f!)'6R8!N!4)jfI!+J")H[rdU*S
+q1[r`2$VrkJ`&!!KQ!!!q$%F!"QF!!)C"q[kZ-#J!"%4!2`!r2!!!U*3r"c!'d(V
+qQMm!R(VqNTjkrT)r"cm')%m[#+LM8%p1qJ"5$!8!$@F!!!S-4`(ZE3!!2Pe(4%F
+r"d(krQ`r%+L8$%B"'fd!!#K)H[j)2caK)(0PBfpZC#"ZG@eLCA)k)-BK*d&ZC#"
+ZEhFJC@jdCA)JB5"cC@0[EQ3JER9YBQ9b1L!R`X!!+!#3!qS!N!3K*d9ZG'9b)'%
+JC'9MD@eKE#"TER4PCf9b)(CKE(9P1L!R!#8!N!05!JC54%4&3eF!#!#3"!J(9e*
+84%9$6!!3!*!%#!YA3Np96N468N9$9!!B!*!%#!GA8P4)49K#!"-!N!3)"P*%8e4
+53`!*!*!%#"SR8(*PFh-JB@jj)'YPH5"dEb"aG@Pd1L!J*`!S!*!$FJ)&4%P@8d`
+!!`#3"!J(9e*83dK"8J!1!*!%#!dR3@4N)&"bEfGbBH$E!:
+
+-- 
+
+Kevin Crowston				UUCP: {seismo,ut-sally}!harvard!kevin
+MIT Sloan School of Management		ARPA: kevin@harvard.ARPA
+
+
